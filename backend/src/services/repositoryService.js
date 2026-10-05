@@ -1,12 +1,13 @@
 import {
   getRepository,
   getRepositoryTree,
-  getLanguages
+  getLanguages,
+  getFileContent
 } from "./githubService.js";
 
+import { analyzeStructure } from "../analyzers/structureAnalyzer.js";
 import { analyzeFiles } from "../analyzers/fileAnalyzer.js";
 import { detectArchitecture } from "./architectureService.js";
-import { analyzeStructure } from "../analyzers/structureAnalyzer.js";
 
 function parseGitHubUrl(url) {
   const parsed = new URL(url);
@@ -41,10 +42,51 @@ export async function analyzeRepository(url) {
     (item) => item.type === "blob"
   );
 
+  const structure = analyzeStructure(files);
   const fileAnalysis = analyzeFiles(files);
   const architecture = detectArchitecture(files);
 
-const structure = analyzeStructure(files);
+  const sourceCandidates = files.filter((file) => {
+    const path = file.path.toLowerCase();
+
+    return (
+      path === "package.json" ||
+      path === "readme.md" ||
+      (
+        path.includes("src/") &&
+        (
+          path.endsWith(".js") ||
+          path.endsWith(".jsx") ||
+          path.endsWith(".ts") ||
+          path.endsWith(".tsx") ||
+          path.endsWith(".py") ||
+          path.endsWith(".java")
+        )
+      )
+    );
+  });
+
+  const selectedFiles = sourceCandidates.slice(0, 8);
+
+  const sourceFiles = [];
+
+  for (const file of selectedFiles) {
+    try {
+      const content = await getFileContent(
+        owner,
+        repo,
+        file.path,
+        repository.default_branch
+      );
+
+      sourceFiles.push({
+        path: file.path,
+        content: content.slice(0, 12000)
+      });
+    } catch (error) {
+      console.log(`Could not read ${file.path}`);
+    }
+  }
 
   return {
     repository: {
@@ -64,8 +106,9 @@ const structure = analyzeStructure(files);
 
     languages,
     fileTypes: fileAnalysis.extensions,
-importantFiles: fileAnalysis.importantFiles,
-    architecture,   
-    structure
+    importantFiles: fileAnalysis.importantFiles,
+    architecture,
+    structure,
+    sourceFiles
   };
 }

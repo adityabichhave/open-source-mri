@@ -28,3 +28,15 @@ export async function getRepositoryTree(owner, repo, branch) {
 export async function getLanguages(owner, repo) {
   return githubRequest(`/repos/${owner}/${repo}/languages`);
 }
+
+export async function getFileContent(owner, repo, path, branch) {
+  const file = await githubRequest(
+    `/repos/${owner}/${repo}/contents/${path}?ref=${branch}`
+  );
+
+  if (!file.content) {
+    return "";
+  }
+
+  return Buffer.from(file.content, "base64").toString("utf-8");
+}
