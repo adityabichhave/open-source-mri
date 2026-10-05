@@ -111,9 +111,9 @@ function ReportDashboard({ result }) {
             <h3>AI Understanding</h3>
           </div>
 
-          <pre>
-            {result.aiAnalysis}
-          </pre>
+          <div className="ai-response">
+  <pre>{result.aiAnalysis}</pre>
+</div>
         </section>
 
       </div>

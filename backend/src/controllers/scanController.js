@@ -38,3 +38,35 @@ export async function scanRepository(req, res) {
     });
   }
 }
+
+export async function explainFile(req, res) {
+  try {
+    const { path, content } = req.body;
+
+    if (!path || !content) {
+      return res.status(400).json({
+        success: false,
+        message: "File path and content are required"
+      });
+    }
+
+    const { analyzeFileWithAI } =
+      await import("../services/aiService.js");
+
+    const explanation =
+      await analyzeFileWithAI(path, content);
+
+    res.json({
+      success: true,
+      explanation
+    });
+
+  } catch (error) {
+    console.error("File explanation error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: error.message || "File explanation failed"
+    });
+  }
+}

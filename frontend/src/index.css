@@ -303,3 +303,59 @@ button {
   border-radius: 12px;
   overflow: hidden;
 }
+
+.selected-file {
+  margin-top: 16px;
+  border: 1px solid #e4e4e7;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #18181b;
+}
+
+.selected-file-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  background: #27272a;
+  color: white;
+}
+
+.selected-file-header button {
+  background: #3f3f46;
+  color: white;
+  padding: 7px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.selected-file pre {
+  margin: 0;
+  padding: 20px;
+  max-height: 450px;
+  overflow: auto;
+  color: #e4e4e7;
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.empty-graph {
+  padding: 40px;
+  text-align: center;
+  color: #71717a;
+}
+.ai-response {
+  padding: 20px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  line-height: 1.6;
+}
+
+.ai-response pre {
+  margin: 0;
+  white-space: pre-wrap;
+  font-family: inherit;
+}

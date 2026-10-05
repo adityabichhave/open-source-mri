@@ -1,15 +1,27 @@
+import "dotenv/config";
 const GITHUB_API = "https://api.github.com";
 
 async function githubRequest(endpoint) {
-  const response = await fetch(`${GITHUB_API}${endpoint}`, {
-    headers: {
-      Accept: "application/vnd.github+json",
-      "User-Agent": "Open-Source-MRI"
+  const headers = {
+    Accept: "application/vnd.github+json",
+    "User-Agent": "Open-Source-MRI"
+  };
+
+  if (process.env.GITHUB_TOKEN) {
+    headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
+  }
+
+  const response = await fetch(
+    `${GITHUB_API}${endpoint}`,
+    {
+      headers
     }
-  });
+  );
 
   if (!response.ok) {
-    throw new Error(`GitHub API error: ${response.status}`);
+    throw new Error(
+      `GitHub API error: ${response.status}`
+    );
   }
 
   return response.json();

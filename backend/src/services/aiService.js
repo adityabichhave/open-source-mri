@@ -5,126 +5,120 @@ const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY
 });
 
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
+function isQuotaError(error) {
+  const message = error?.message?.toLowerCase() || "";
 
-async function generateAIAnalysis(prompt) {
-  const maxRetries = 3;
-
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      console.log(`Gemini attempt ${attempt}/${maxRetries}`);
-
-      const interaction = await ai.interactions.create({
-        model: "gemini-3.8-flash",
-        input: prompt
-      });
-
-      return interaction.output_text;
-
-    } catch (error) {
-      console.error(
-        `Gemini attempt ${attempt} failed:`,
-        error.message
-      );
-
-      if (attempt === maxRetries) {
-  if (
-    error.message?.includes("429") ||
-    error.message?.includes("Rate limit") ||
-    error.message?.includes("quota")
-  ) {
-    return `
-AI analysis is temporarily unavailable because the Gemini API
-daily request limit has been reached.
-
-The repository scan itself completed successfully.
-Repository structure, architecture, files, and source analysis
-are still available.
-
-AI analysis will become available again when the API quota resets.
-`;
-  }
-
-  throw error;
-}
-
-      const delay = 2000 * Math.pow(2, attempt - 1);
-
-      console.log(
-        `Retrying Gemini in ${delay / 1000} seconds...`
-      );
-
-      await sleep(delay);
-    }
-  }
+  return (
+    message.includes("429") ||
+    message.includes("quota") ||
+    message.includes("rate limit") ||
+    message.includes("resource_exhausted")
+  );
 }
 
 export async function analyzeRepositoryWithAI(repositoryData) {
-  const prompt = `
+  try {
+    const prompt = `
 You are the AI engine of Open Source MRI.
 
 Analyze this GitHub repository and explain it to a developer.
 
-Repository metadata:
-${JSON.stringify(
-  {
-    repository: repositoryData.repository,
-    stats: repositoryData.stats,
-    languages: repositoryData.languages,
-    fileTypes: repositoryData.fileTypes,
-    importantFiles: repositoryData.importantFiles,
-    architecture: repositoryData.architecture,
-    structure: repositoryData.structure
-  },
-  null,
-  2
-)}
-
-Actual source files:
-${JSON.stringify(
-  repositoryData.sourceFiles,
-  null,
-  2
-)}
+Repository data:
+${JSON.stringify(repositoryData, null, 2)}
 
 Give the analysis in these sections:
 
 1. Project Purpose
 2. Technology Stack
 3. Architecture
-4. Important Files and Their Responsibilities
-5. Code Flow
-6. How the Main Components Work Together
-7. Potential Risks or Issues
-8. How a New Developer Should Understand This Project
+4. Important Parts
+5. Repository Structure
+6. Potential Risks or Issues
+7. How a new developer should understand this project
 
-For Code Flow:
+Be technically accurate.
 
-- Use the actual source code provided.
-- Explain where execution starts.
-- Explain important functions and modules.
-- Explain how data or requests move through the application.
-- Explain important relationships between files.
-
-For "How the Main Components Work Together":
-
-- Explain how important files/modules interact.
-- Mention actual file names when supported by the source code.
-- Do not invent relationships that cannot be verified.
-
-Rules:
-
-- Only use information supported by the repository data and source code.
-- Do not invent files.
-- Do not invent functions.
-- Do not invent dependencies.
-- Do not invent architecture.
-- Clearly distinguish documented behavior from inferred behavior.
-- Be technically accurate.
-- Prefer concrete file names and code references.
+Do not invent files, technologies, or functionality that are not present
+in the provided repository data.
 `;
 
-  return generateAIAnalysis(prompt);
+    const interaction = await ai.interactions.create({
+      model: "gemini-3.8-flash",
+      input: prompt
+    });
+
+    return interaction.output_text;
+
+  } catch (error) {
+    console.error("Gemini repository analysis failed:", error.message);
+
+    if (isQuotaError(error)) {
+      return `
+AI analysis is temporarily unavailable because the Gemini API quota
+has been reached.
+
+The repository scan, file analysis, architecture detection and code flow
+analysis are still available.
+
+Please try AI analysis again after the Gemini quota resets.
+`;
+    }
+
+    return `
+AI analysis is temporarily unavailable.
+
+The repository scan and structural analysis are still available.
+`;
+  }
+}
+
+export async function analyzeFileWithAI(filePath, content) {
+  try {
+    const prompt = `
+You are the AI engine of Open Source MRI.
+
+Explain this source file to a developer.
+
+File:
+${filePath}
+
+Source code:
+${content}
+
+Explain:
+
+1. What this file does
+2. Its main responsibility
+3. Important functions/components
+4. Important imports and dependencies
+5. How this file fits into the project
+6. What a developer should understand before modifying it
+
+Be technically accurate.
+Do not invent functionality that is not present in the code.
+`;
+
+    const interaction = await ai.interactions.create({
+      model: "gemini-3.8-flash",
+      input: prompt
+    });
+
+    return interaction.output_text;
+
+  } catch (error) {
+    console.error("Gemini file explanation failed:", error.message);
+
+    if (isQuotaError(error)) {
+      return `
+AI explanation is temporarily unavailable because the Gemini API quota
+has been reached.
+
+Try again after the quota resets.
+`;
+    }
+
+    return `
+AI explanation is temporarily unavailable right now.
+`;
+  }
 }

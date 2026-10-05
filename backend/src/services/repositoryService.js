@@ -8,6 +8,7 @@ import {
 import { analyzeStructure } from "../analyzers/structureAnalyzer.js";
 import { analyzeFiles } from "../analyzers/fileAnalyzer.js";
 import { detectArchitecture } from "./architectureService.js";
+import { analyzeCodeFlow } from "../analyzers/codeFlowAnalyzer.js";
 
 function parseGitHubUrl(url) {
   const parsed = new URL(url);
@@ -28,13 +29,23 @@ function parseGitHubUrl(url) {
   };
 }
 
+function isCodeFile(path) {
+  return /\.(js|jsx|ts|tsx|mjs|cjs|py|java)$/.test(
+    path.toLowerCase()
+  );
+}
+
 export async function analyzeRepository(url) {
   const { owner, repo } = parseGitHubUrl(url);
 
   const repository = await getRepository(owner, repo);
 
   const [tree, languages] = await Promise.all([
-    getRepositoryTree(owner, repo, repository.default_branch),
+    getRepositoryTree(
+      owner,
+      repo,
+      repository.default_branch
+    ),
     getLanguages(owner, repo)
   ]);
 
@@ -46,27 +57,62 @@ export async function analyzeRepository(url) {
   const fileAnalysis = analyzeFiles(files);
   const architecture = detectArchitecture(files);
 
+  /*
+   * Select actual source-code files.
+   *
+   * Supports:
+   * - src/
+   * - app/
+   * - pages/
+   * - components/
+   * - services/
+   * - lib/
+   * - utils/
+   * - hooks/
+   */
+
   const sourceCandidates = files.filter((file) => {
     const path = file.path.toLowerCase();
 
+    if (!isCodeFile(path)) {
+      return false;
+    }
+
+    if (
+      path.includes("node_modules/") ||
+      path.includes(".next/") ||
+      path.includes("dist/") ||
+      path.includes("build/")
+    ) {
+      return false;
+    }
+
     return (
-      path === "package.json" ||
-      path === "readme.md" ||
-      (
-        path.includes("src/") &&
-        (
-          path.endsWith(".js") ||
-          path.endsWith(".jsx") ||
-          path.endsWith(".ts") ||
-          path.endsWith(".tsx") ||
-          path.endsWith(".py") ||
-          path.endsWith(".java")
-        )
-      )
+      path.startsWith("src/") ||
+      path.startsWith("app/") ||
+      path.startsWith("pages/") ||
+      path.startsWith("components/") ||
+      path.startsWith("services/") ||
+      path.startsWith("lib/") ||
+      path.startsWith("utils/") ||
+      path.startsWith("hooks/") ||
+      path === "app.tsx" ||
+      path === "app.jsx" ||
+      path === "app.ts" ||
+      path === "app.js" ||
+      path === "main.tsx" ||
+      path === "main.jsx" ||
+      path === "main.ts" ||
+      path === "main.js"
     );
   });
 
-  const selectedFiles = sourceCandidates.slice(0, 8);
+  /*
+   * Limit downloaded files so large repositories
+   * don't become extremely slow.
+   */
+
+  const selectedFiles = sourceCandidates.slice(0, 30);
 
   const sourceFiles = [];
 
@@ -84,9 +130,22 @@ export async function analyzeRepository(url) {
         content: content.slice(0, 12000)
       });
     } catch (error) {
-      console.log(`Could not read ${file.path}`);
+      console.log(
+        `Could not read ${file.path}: ${error.message}`
+      );
     }
   }
+
+  /*
+   * IMPORTANT:
+   * Code flow must be analyzed AFTER sourceFiles
+   * have been downloaded.
+   */
+
+  const codeFlow = analyzeCodeFlow(
+    files,
+    sourceFiles
+  );
 
   return {
     repository: {
@@ -109,6 +168,9 @@ export async function analyzeRepository(url) {
     importantFiles: fileAnalysis.importantFiles,
     architecture,
     structure,
-    sourceFiles
+
+    sourceFiles,
+
+    codeFlow
   };
 }
