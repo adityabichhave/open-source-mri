@@ -30,8 +30,25 @@ async function generateAIAnalysis(prompt) {
       );
 
       if (attempt === maxRetries) {
-        throw error;
-      }
+  if (
+    error.message?.includes("429") ||
+    error.message?.includes("Rate limit") ||
+    error.message?.includes("quota")
+  ) {
+    return `
+AI analysis is temporarily unavailable because the Gemini API
+daily request limit has been reached.
+
+The repository scan itself completed successfully.
+Repository structure, architecture, files, and source analysis
+are still available.
+
+AI analysis will become available again when the API quota resets.
+`;
+  }
+
+  throw error;
+}
 
       const delay = 2000 * Math.pow(2, attempt - 1);
 

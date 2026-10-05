@@ -2,11 +2,17 @@ import RepoInput from "./components/RepoInput";
 
 function App() {
   return (
-    <div>
-      <h1>Open Source MRI</h1>
-      <p>See inside. Understand faster.</p>
+    <div className="app">
+      <header className="topbar">
+        <div>
+          <h1>Open Source MRI</h1>
+          <p>See inside. Understand faster.</p>
+        </div>
+      </header>
 
-      <RepoInput />
+      <main className="main-content">
+        <RepoInput />
+      </main>
     </div>
   );
 }
