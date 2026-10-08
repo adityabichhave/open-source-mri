@@ -1,88 +1,252 @@
-# 🧠 Open Source MRI
+```markdown
+# Open Source MRI
 
-> **See inside any GitHub repository. Understand how it works.**
+Open Source MRI is a GitHub repository analysis tool that helps developers understand unfamiliar codebases faster.
 
-Open Source MRI is an intelligent GitHub repository analysis platform that turns a codebase into a visual and understandable **"MRI scan"**.
+It analyzes a repository and provides information about its structure, technologies, architecture, dependencies, code flow, and file relationships through an interactive dashboard.
 
-Instead of manually exploring hundreds of files, Open Source MRI analyzes the repository structure, technologies, architecture, dependencies, code flow, and file relationships — then presents the results through an interactive dashboard.
+## Features
 
-It also uses **Google Gemini** to generate AI-powered explanations of repositories and individual source files.
-
----
-
-## 🚀 Why Open Source MRI?
-
-Understanding an unfamiliar codebase can take hours or even days.
-
-Developers usually need to:
-
-- Explore the folder structure
-- Identify important files
-- Understand the architecture
-- Trace imports and dependencies
-- Find which files depend on a specific file
-- Understand the impact of changing a file
-- Read unfamiliar source code
-
-**Open Source MRI brings these tasks into one visual analysis platform.**
-
-### Instead of asking:
-
-> "Where do I start?"
-
-Open Source MRI helps answer:
-
-> **"How does this repository work?"**
-
----
-
-# ✨ Features
-
-## 🔍 Repository Scanner
-
-Paste any public GitHub repository URL and Open Source MRI analyzes the repository.
-
-It extracts:
-
-- Repository metadata
-- File structure
-- Programming languages
-- Important files
+- GitHub repository scanning
 - Repository statistics
-- Architecture signals
-- Source-code relationships
+- Programming language detection
+- Directory structure analysis
+- Important file detection
+- Architecture detection
+- Interactive code flow visualization
+- Dependency analysis
+- Dependent file analysis
+- Change impact analysis
+- Risk level calculation
+- File inspector
+- AI-powered repository analysis
+- AI-powered file explanation
+- Repository insights
+- Engineering recommendations
 
----
+## Tech Stack
 
-## 🏗️ Architecture Analysis
+### Frontend
 
-Automatically detects structural characteristics of the repository.
+- React
+- Vite
+- JavaScript
+- React Flow
+- Lucide React
+- CSS
 
-Examples include:
+### Backend
 
-- Frontend applications
-- Backend services
-- API layers
-- Components
-- Database-related structures
-- Configuration files
-- Service layers
-- Routes
-- Controllers
+- Node.js
+- Express.js
+- GitHub REST API
+- REST API
 
----
+### AI
 
-## 🌐 Interactive Code Flow
+- Google Gemini API
+- @google/genai
 
-Visualizes relationships between source files using an interactive graph.
-
-The graph helps developers understand:
+## Project Structure
 
 ```text
-File A
-  ↓
-File B
-  ↓
-File C
-  ↓
-File D
+open_source_mri/
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── RepoInput.jsx
+│   │   │   ├── ReportDashboard.jsx
+│   │   │   ├── ArchitectureGraph.jsx
+│   │   │   ├── AnalyzePanel.jsx
+│   │   │   ├── ExplorePanel.jsx
+│   │   │   └── InsightsPanel.jsx
+│   │   ├── services/
+│   │   │   └── api.js
+│   │   ├── App.jsx
+│   │   └── index.css
+│   └── package.json
+│
+├── backend/
+│   ├── src/
+│   │   ├── controllers/
+│   │   │   └── scanController.js
+│   │   ├── services/
+│   │   │   ├── githubService.js
+│   │   │   ├── repositoryService.js
+│   │   │   ├── languageService.js
+│   │   │   ├── architectureService.js
+│   │   │   └── aiService.js
+│   │   ├── analyzers/
+│   │   │   ├── fileAnalyzer.js
+│   │   │   ├── dependencyAnalyzer.js
+│   │   │   ├── structureAnalyzer.js
+│   │   │   └── codeFlowAnalyzer.js
+│   │   ├── routes/
+│   │   │   └── scanRoutes.js
+│   │   ├── utils/
+│   │   │   ├── githubParser.js
+│   │   │   └── languageDetector.js
+│   │   ├── app.js
+│   │   └── server.js
+│   └── package.json
+│
+└── README.md
+```
+
+## How It Works
+
+```text
+GitHub Repository
+        ↓
+Repository Scanner
+        ↓
+File & Structure Analysis
+        ↓
+Language Analysis
+        ↓
+Architecture Analysis
+        ↓
+Dependency Analysis
+        ↓
+Code Flow Analysis
+        ↓
+Impact Analysis
+        ↓
+AI Analysis
+        ↓
+Interactive Dashboard
+```
+
+## Getting Started
+
+### Clone the Repository
+
+```bash
+git clone <YOUR_GITHUB_REPOSITORY_URL>
+cd open_source_mri
+```
+
+### Backend
+
+```bash
+cd backend
+npm install
+```
+
+Create a `.env` file:
+
+```env
+PORT=5001
+GITHUB_TOKEN=your_github_token
+GEMINI_API_KEY=your_gemini_api_key
+```
+
+Start the backend:
+
+```bash
+npm run dev
+```
+
+Backend:
+
+```text
+http://localhost:5001
+```
+
+### Frontend
+
+Open another terminal:
+
+```bash
+cd frontend
+npm install
+```
+
+Create a `.env` file:
+
+```env
+VITE_API_URL=http://localhost:5001
+```
+
+Start the frontend:
+
+```bash
+npm run dev
+```
+
+Frontend:
+
+```text
+http://localhost:5173
+```
+
+## Usage
+
+1. Open the frontend.
+2. Enter a GitHub repository URL.
+3. Click `Scan Repository`.
+4. Wait for the repository analysis.
+5. Explore the Dashboard, Explore, Analyze, Insights, and Code Flow sections.
+6. Select files to view dependencies, dependents, impact score, risk level, source code, and AI explanation.
+
+## Impact Analysis
+
+Open Source MRI calculates the impact of a file using its dependencies and dependents.
+
+```text
+Impact Score = Dependencies + (Dependents × 2)
+```
+
+Risk levels:
+
+```text
+LOW
+MEDIUM
+HIGH
+```
+
+This helps developers understand which files may have a larger effect on the rest of the application when modified.
+
+## AI File Analysis
+
+Google Gemini is used to analyze selected source files and provide a technical explanation of the code.
+
+The AI analysis can explain:
+
+- File purpose
+- Code structure
+- Important functions
+- Dependencies
+- Data flow
+- Implementation details
+
+## Security
+
+API keys and tokens should never be committed to the repository.
+
+Use environment variables for:
+
+```env
+GITHUB_TOKEN=your_github_token
+GEMINI_API_KEY=your_gemini_api_key
+```
+
+Make sure `.env` is included in `.gitignore`.
+
+## Future Scope
+
+- Function-level code flow
+- Pull request impact analysis
+- Git diff analysis
+- Security analysis
+- Code smell detection
+- Technical debt analysis
+- Repository comparison
+- Deeper architecture analysis
+- Multi-language AST analysis
+- AI-generated architecture diagrams
+
+## License
+
+This project is developed for educational, experimental, and hackathon purposes.
+```
