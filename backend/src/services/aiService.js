@@ -4,6 +4,17 @@ import "dotenv/config";
 const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY
 });
+function withTimeout(promise, ms = 15000) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) =>
+      setTimeout(
+        () => reject(new Error("Gemini request timed out")),
+        ms
+      )
+    )
+  ]);
+}
 
 function isQuotaError(error) {
   const message = error?.message?.toLowerCase() || "";
@@ -42,10 +53,13 @@ Do not invent files, technologies, or functionality that are not present
 in the provided repository data.
 `;
 
-    const interaction = await ai.interactions.create({
-      model: "gemini-3.8-flash",
-      input: prompt
-    });
+    const interaction = await withTimeout(
+  ai.interactions.create({
+    model: "gemini-3.8-flash",
+    input: prompt
+  }),
+  15000
+);
 
     return interaction.output_text;
 
@@ -121,4 +135,121 @@ Try again after the quota resets.
 AI explanation is temporarily unavailable right now.
 `;
   }
+}
+
+export function buildRepositoryUnderstanding(repositoryData) {
+  const {
+    repository,
+    stats,
+    languages = {},
+    architecture = {},
+    importantFiles = [],
+    structure = {}
+  } = repositoryData;
+
+  const sortedLanguages = Object.entries(languages)
+    .sort((a, b) => b[1] - a[1]);
+
+  const totalBytes = sortedLanguages.reduce(
+    (sum, [, bytes]) => sum + bytes,
+    0
+  );
+
+  const primaryLanguage =
+    sortedLanguages.length > 0
+      ? sortedLanguages[0][0]
+      : "Unknown";
+
+  const primaryBytes =
+    sortedLanguages.length > 0
+      ? sortedLanguages[0][1]
+      : 0;
+
+  const primaryPercentage =
+    totalBytes > 0
+      ? ((primaryBytes / totalBytes) * 100).toFixed(1)
+      : "0.0";
+
+  const detectedArchitecture = Object.entries(architecture)
+    .filter(([, value]) => value)
+    .map(([key, value]) => {
+      if (value === true) {
+        return key;
+      }
+
+      return `${key}: ${value}`;
+    });
+
+  const topDirectories = Object.entries(structure)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5);
+
+  return `
+REPOSITORY OVERVIEW
+
+${repository.name} is a ${primaryLanguage}-based software repository.
+
+The repository contains ${stats.files} files across ${
+    stats.languages
+  } detected languages and ${stats.directories} directories.
+
+
+TECHNOLOGY PROFILE
+
+Primary Language:
+${primaryLanguage} (${primaryPercentage}%)
+
+Detected Languages:
+${sortedLanguages
+  .map(([language, bytes]) => {
+    const percentage =
+      totalBytes > 0
+        ? ((bytes / totalBytes) * 100).toFixed(1)
+        : "0.0";
+
+    return `• ${language}: ${percentage}%`;
+  })
+  .join("\n")}
+
+
+ARCHITECTURE
+
+${
+  detectedArchitecture.length > 0
+    ? detectedArchitecture
+        .map((item) => `• ${item}`)
+        .join("\n")
+    : "• No specific architecture patterns detected."
+}
+
+
+IMPORTANT FILES
+
+${
+  importantFiles.length > 0
+    ? importantFiles.map((file) => `• ${file}`).join("\n")
+    : "• No important files detected."
+}
+
+
+REPOSITORY STRUCTURE
+
+${
+  topDirectories.length > 0
+    ? topDirectories
+        .map(([folder, count]) => `• ${folder}: ${count} files`)
+        .join("\n")
+    : "• Structure information unavailable."
+  }
+
+
+MRI STATUS
+
+✓ Repository scanned
+✓ File structure analyzed
+✓ Technology profile detected
+✓ Architecture analyzed
+✓ Code flow analyzed
+• Generative AI explanation: optional
+`.trim();
 }

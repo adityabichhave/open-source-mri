@@ -114,27 +114,33 @@ export async function analyzeRepository(url) {
 
   const selectedFiles = sourceCandidates.slice(0, 30);
 
-  const sourceFiles = [];
+const sourceResults = await Promise.allSettled(
+  selectedFiles.map(async (file) => {
+    const content = await getFileContent(
+      owner,
+      repo,
+      file.path,
+      repository.default_branch
+    );
 
-  for (const file of selectedFiles) {
-    try {
-      const content = await getFileContent(
-        owner,
-        repo,
-        file.path,
-        repository.default_branch
-      );
+    return {
+      path: file.path,
+      content: content.slice(0, 12000)
+    };
+  })
+);
 
-      sourceFiles.push({
-        path: file.path,
-        content: content.slice(0, 12000)
-      });
-    } catch (error) {
-      console.log(
-        `Could not read ${file.path}: ${error.message}`
-      );
-    }
+const sourceFiles = [];
+
+for (const result of sourceResults) {
+  if (result.status === "fulfilled") {
+    sourceFiles.push(result.value);
+  } else {
+    console.log(
+      `Could not read source file: ${result.reason?.message || result.reason}`
+    );
   }
+}
 
   /*
    * IMPORTANT:

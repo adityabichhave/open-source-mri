@@ -1,8 +1,21 @@
-import "dotenv/config";
 import app from "./app.js";
 
-const PORT = process.env.PORT || 5000;
+const PORT = 5001;
 
-app.listen(PORT, () => {
-  console.log(`Open Source MRI backend running on port ${PORT}`);
+const server = app.listen(PORT, "127.0.0.1", () => {
+  console.log("SERVER STARTED");
+  console.log("LISTENING:", server.listening);
+  console.log("ADDRESS:", server.address());
 });
+
+server.on("listening", () => {
+  console.log("LISTEN EVENT");
+});
+
+server.on("close", () => {
+  console.log("🚨 SERVER CLOSED");
+});
+
+setInterval(() => {
+  console.log("ALIVE:", server.listening);
+}, 2000);

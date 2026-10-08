@@ -1,5 +1,8 @@
 import { analyzeRepository } from "../services/repositoryService.js";
-import { analyzeRepositoryWithAI } from "../services/aiService.js";
+import {
+  analyzeRepositoryWithAI,
+  buildRepositoryUnderstanding
+} from "../services/aiService.js";
 
 export async function scanRepository(req, res) {
   try {
@@ -18,8 +21,28 @@ export async function scanRepository(req, res) {
 
     console.log("Running AI analysis...");
 
-    const aiAnalysis =
-      await analyzeRepositoryWithAI(repositoryData);
+    let aiAnalysis;
+
+try {
+  aiAnalysis =
+    await analyzeRepositoryWithAI(repositoryData);
+
+  if (
+    !aiAnalysis ||
+    aiAnalysis.includes("temporarily unavailable") ||
+    aiAnalysis.includes("quota")
+  ) {
+    aiAnalysis =
+      buildRepositoryUnderstanding(repositoryData);
+  }
+} catch (error) {
+  console.log(
+    "Gemini unavailable. Using deterministic MRI report."
+  );
+
+  aiAnalysis =
+    buildRepositoryUnderstanding(repositoryData);
+}
 
     res.json({
       success: true,

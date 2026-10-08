@@ -18,3 +18,25 @@ export async function scanRepository(url) {
 
   return data;
 }
+export async function explainFile(path, content) {
+  const response = await fetch(`${API_URL}/api/scan/explain`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      path,
+      content
+    })
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.message || "File explanation failed"
+    );
+  }
+
+  return data;
+}

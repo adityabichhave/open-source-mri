@@ -9,7 +9,6 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
-app.use("/api/scan", scanRoutes);
 
 app.get("/api/health", (req, res) => {
   res.json({
@@ -17,5 +16,7 @@ app.get("/api/health", (req, res) => {
     message: "Open Source MRI backend is running"
   });
 });
+
+app.use("/api/scan", scanRoutes);
 
 export default app;

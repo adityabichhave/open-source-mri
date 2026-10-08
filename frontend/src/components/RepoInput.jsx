@@ -2,7 +2,7 @@ import { useState } from "react";
 import { scanRepository } from "../services/api";
 import ReportDashboard from "./ReportDashboard";
 
-function RepoInput() {
+function RepoInput({ onScanComplete }) {
   const [url, setUrl] = useState("");
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -20,6 +20,7 @@ function RepoInput() {
       const response = await scanRepository(url);
 
       setResult(response.data);
+      onScanComplete(response.data);
     } catch (error) {
       alert(error.message);
     } finally {
